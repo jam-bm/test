@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Check-in · Track Desk</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="driver" id="app"><p class="muted">Loading…</p></div>
+  <script>
+    const token = location.pathname.split('/').pop();
+    const app = document.getElementById('app');
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+    const when = (ms) => new Date(ms).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+    let state = { status: 'rolling', coords: null };
+
+    async function call(method, body) {
+      const res = await fetch('/api/c/' + token, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || 'Something went wrong');
+      return data;
+    }
+
+    function done(msg) {
+      app.innerHTML = `<div class="card done"><div class="check">✓</div><h1>${esc(msg)}</h1><p class="muted">You can close this page. Drive safe.</p></div>`;
+    }
+
+    function render(v) {
+      if (v.delivered) return done('This load is delivered');
+      app.innerHTML = `
+        <div class="brand"><span class="brand-mark">◎</span> ${esc(v.company_name)}</div>
+        <div class="card">
+          <div class="muted small">Load ${esc(v.ref)}</div>
+          <div class="route" style="margin:4px 0 6px">${esc(v.origin.split(',')[0])} <span class="arrow">→</span> ${esc(v.destination.split(',')[0])}</div>
+          <div class="muted small">Appointment ${when(v.delivery_at)}</div>
+        </div>
+        <div class="card">
+          <h1 style="font-size:22px">Hi ${esc(v.driver_name.split(' ')[0])}, where are you?</h1>
+          <p class="muted">One tap and you won't get a phone call.</p>
+          <button class="btn primary block" id="gps">📍 Share my location</button>
+          <p class="hint" id="gps-status" style="text-align:center"></p>
+          <div class="field" style="margin-top:12px"><label>Or pick the nearest city</label>
+            <select id="place"><option value="">Choose…</option>${v.cities.map((c) => `<option>${esc(c)}</option>`).join('')}</select></div>
+          <label>How's it going?</label>
+          <div class="choice" id="status">
+            <button data-s="rolling" class="on">Rolling, on time</button>
+            <button data-s="delayed">Running late</button>
+            <button data-s="delivered" style="grid-column: span 2">Delivered</button>
+          </div>
+          <div class="field" id="delay-wrap" style="margin-top:12px" hidden><label>About how late?</label>
+            <select id="delay"><option value="30">30 min</option><option value="60">1 hour</option><option value="120">2 hours</option><option value="240">4 hours</option><option value="480">8+ hours</option></select></div>
+          <div class="field" style="margin-top:12px"><label>Note (optional)</label><input id="note" placeholder="e.g. waiting at the dock"></div>
+          <div class="err" id="err"></div>
+          <button class="btn primary block" id="send">Send update</button>
+        </div>`;
+
+      document.getElementById('gps').onclick = () => {
+        const s = document.getElementById('gps-status');
+        if (!navigator.geolocation) { s.textContent = 'Location is not available. Pick a city instead.'; return; }
+        s.textContent = 'Getting your location…';
+        navigator.geolocation.getCurrentPosition(
+          (p) => { state.coords = { lat: p.coords.latitude, lng: p.coords.longitude }; s.textContent = '✓ Location ready'; },
+          () => { s.textContent = 'Could not get your location. Pick a city instead.'; },
+          { enableHighAccuracy: false, timeout: 10000 }
+        );
+      };
+      document.querySelectorAll('#status button').forEach((b) => b.onclick = () => {
+        state.status = b.dataset.s;
+        document.querySelectorAll('#status button').forEach((x) => x.classList.toggle('on', x === b));
+        document.getElementById('delay-wrap').hidden = state.status !== 'delayed';
+      });
+      document.getElementById('send').onclick = async () => {
+        const err = document.getElementById('err');
+        err.textContent = '';
+        const place = document.getElementById('place').value;
+        const delivered = state.status === 'delivered';
+        if (!delivered && !state.coords && !place) { err.textContent = 'Share your location or pick a city.'; return; }
+        const body = {
+          ...(state.coords || {}), place: state.coords ? undefined : place, delivered,
+          delay_minutes: state.status === 'delayed' ? Number(document.getElementById('delay').value) : 0,
+          note: document.getElementById('note').value,
+        };
+        try { await call('POST', body); done(delivered ? 'Marked delivered. Thanks!' : 'Thanks, update sent'); }
+        catch (e) { err.textContent = e.message; }
+      };
+    }
+
+    call('GET').then(render).catch((e) => { app.innerHTML = `<div class="card done"><h1>Link not valid</h1><p class="muted">${esc(e.message)}</p></div>`; });
+  </script>
+</body>
+</html>

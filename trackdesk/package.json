@@ -1,0 +1,13 @@
+{
+  "name": "trackdesk",
+  "version": "0.1.0",
+  "description": "Done-for-you check calls for small freight brokers: texts every driver, logs location + ETA, flags late loads before the shipper asks.",
+  "private": true,
+  "main": "src/server.js",
+  "engines": { "node": ">=22.5" },
+  "scripts": {
+    "start": "node --no-warnings src/server.js",
+    "seed": "node --no-warnings scripts/seed.js",
+    "test": "node --no-warnings --test test/*.test.js"
+  }
+}
