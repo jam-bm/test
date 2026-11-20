@@ -1,0 +1,209 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  :root { --gold: #f5c451; --ink: #1a1405; --bg: #08090c; --red: #ff5a6a; --green: #3ecf8e; --muted: #9aa0ad; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--bg); }
+  body { font-family: "Inter Display", Inter, sans-serif; color: #fff; position: relative; }
+  .bg { position: absolute; inset: 0; background:
+      radial-gradient(900px 700px at 50% 30%, rgba(245,196,81,.10), transparent 70%),
+      radial-gradient(700px 600px at 50% 100%, rgba(245,196,81,.06), transparent 70%), var(--bg); }
+  .grid { position: absolute; inset: -200px; background-image:
+      linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 90px 90px; transform: perspective(900px) rotateX(55deg) translateY(var(--gy, 0px)); transform-origin: 50% 100%; top: 900px; }
+  .scene { position: absolute; inset: 0; opacity: 0; }
+
+  /* every animated element: name + duration set per element, delay via --d (seconds) */
+  .a { animation-duration: .6s; animation-timing-function: cubic-bezier(.2,.8,.2,1); animation-fill-mode: both; animation-play-state: paused; animation-delay: calc(var(--d) * 1s); }
+  @keyframes up { from { opacity: 0; transform: translateY(60px); } to { opacity: 1; transform: none; } }
+  @keyframes pop { 0% { opacity: 0; transform: scale(.4); } 70% { opacity: 1; transform: scale(1.08); } 100% { opacity: 1; transform: scale(1); } }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeout { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes slideup { from { opacity: 0; transform: translateY(400px) scale(.94); } to { opacity: 1; transform: none; } }
+  @keyframes zoomin { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
+  @keyframes ripple { 0% { opacity: .9; transform: scale(.2); } 100% { opacity: 0; transform: scale(2.4); } }
+  @keyframes strike { from { width: 0; } to { width: 100%; } }
+  @keyframes glow { 0%,100% { box-shadow: 0 0 0 0 rgba(255,90,106,0); } 50% { box-shadow: 0 0 90px 10px rgba(255,90,106,.55); } }
+  @keyframes shake { 0%,100% { transform: rotate(0); } 20% { transform: rotate(-14deg); } 40% { transform: rotate(12deg); } 60% { transform: rotate(-8deg); } 80% { transform: rotate(6deg); } }
+  .up { animation-name: up; } .pop { animation-name: pop; } .fade { animation-name: fade; } .slideup { animation-name: slideup; animation-duration: .9s; }
+  .zoomin { animation-name: zoomin; animation-duration: .8s; }
+
+  .cap { position: absolute; left: 70px; right: 70px; text-align: center; font-weight: 800; letter-spacing: -0.03em; line-height: 1.08; }
+  .h1 { font-size: 92px; }
+  .h2 { font-size: 66px; }
+  .h3 { font-size: 46px; font-weight: 600; color: #d6d9e0; letter-spacing: -0.015em; line-height: 1.25; }
+  .gold { color: var(--gold); }
+  .hl { background: var(--gold); color: var(--ink); padding: 0 .18em; border-radius: .14em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  .step { display: inline-flex; align-items: center; justify-content: center; width: 78px; height: 78px; border-radius: 50%; background: var(--gold); color: var(--ink); font-size: 46px; font-weight: 900; vertical-align: middle; margin-right: 18px; position: relative; top: -6px; }
+
+  /* Scene 1: phone ringing */
+  .bubble { position: absolute; background: var(--gold); color: var(--ink); font-weight: 800; font-size: 40px; padding: 18px 28px; border-radius: 26px 26px 26px 6px; box-shadow: 0 20px 50px rgba(0,0,0,.5); white-space: nowrap; }
+  .ring { position: absolute; left: 50%; top: 1080px; width: 260px; height: 260px; margin-left: -130px; border-radius: 50%; background: #15171d; border: 3px solid #2a2e38; display: grid; place-items: center; }
+  .ring svg { width: 120px; height: 120px; animation-name: shake; animation-duration: .5s; animation-iteration-count: 8; animation-timing-function: linear; }
+  .ring .rp { position: absolute; inset: 0; border-radius: 50%; border: 4px solid var(--gold); animation-name: ripple; animation-duration: 1.2s; animation-iteration-count: 4; animation-fill-mode: none !important; opacity: 0; }
+
+  /* Scene 2: math */
+  .math { position: absolute; left: 0; right: 0; top: 470px; text-align: center; }
+  .math .line { font-size: 64px; font-weight: 700; color: #d6d9e0; margin-bottom: 22px; letter-spacing: -0.02em; }
+  .math .line b { color: #fff; }
+  .big { font-size: 300px; font-weight: 900; letter-spacing: -0.06em; line-height: 1; color: var(--gold); font-variant-numeric: tabular-nums; text-shadow: 0 0 80px rgba(245,196,81,.35); }
+  .big small { font-size: 110px; letter-spacing: -0.03em; }
+
+  /* Scene 3: brand */
+  .logo { position: absolute; left: 50%; top: 700px; transform: translateX(-50%); text-align: center; }
+  .mark { width: 220px; height: 220px; border-radius: 56px; background: var(--gold); color: var(--ink); display: grid; place-items: center; margin: 0 auto 50px; box-shadow: 0 30px 120px rgba(245,196,81,.45); }
+  .mark svg { width: 130px; height: 130px; }
+  .wordmark { font-size: 150px; font-weight: 900; letter-spacing: -0.05em; white-space: nowrap; }
+
+  /* Phone */
+  .phone { position: absolute; left: 50%; top: 420px; width: 560px; height: 1120px; margin-left: -280px; border-radius: 90px; background: #000; border: 14px solid #23262e; box-shadow: 0 60px 160px rgba(0,0,0,.7), 0 0 0 2px #3a3e48; overflow: hidden; }
+  .phone .notch { position: absolute; top: 18px; left: 50%; width: 190px; height: 48px; margin-left: -95px; background: #000; border-radius: 30px; z-index: 5; }
+  .screen { position: absolute; inset: 0; }
+  .screen img { width: 100%; display: block; }
+  .sms { position: absolute; inset: 0; background: linear-gradient(#1c1f27, #0c0d11); padding: 120px 34px 0; }
+  .sms .from { text-align: center; color: var(--muted); font-size: 26px; font-weight: 600; margin-bottom: 8px; }
+  .sms .av { width: 96px; height: 96px; border-radius: 50%; background: var(--gold); color: var(--ink); margin: 0 auto 14px; display: grid; place-items: center; font-weight: 900; font-size: 40px; }
+  .sms .msg { background: #2a2d36; border-radius: 34px 34px 34px 10px; padding: 26px 30px; font-size: 32px; line-height: 1.35; font-weight: 500; margin-top: 46px; letter-spacing: -0.01em; }
+  .sms .msg u { color: #79b4ff; text-decoration: none; }
+  .tap { position: absolute; width: 140px; height: 140px; border-radius: 50%; background: rgba(255,255,255,.55); animation-name: ripple; animation-duration: .7s; opacity: 0; animation-fill-mode: none !important; }
+
+  /* Screens shown as cards */
+  .shot { position: absolute; left: 50%; border-radius: 34px; overflow: hidden; box-shadow: 0 50px 140px rgba(0,0,0,.75), 0 0 0 2px #2a2e38; }
+  .shot img { display: block; width: 100%; }
+  .pin { position: absolute; border: 6px solid var(--red); border-radius: 30px 0 0 0; box-shadow: 0 0 60px rgba(255,90,106,.45); }
+  .pin.red { border-color: var(--red); }
+
+  /* End card */
+  .cta { position: absolute; left: 0; right: 0; margin: 0 auto; width: fit-content; top: 1460px; background: var(--gold); color: var(--ink); font-size: 56px; font-weight: 900; padding: 34px 64px; border-radius: 999px; white-space: nowrap; letter-spacing: -0.02em; box-shadow: 0 30px 90px rgba(245,196,81,.35); }
+  .ticks { position: absolute; left: 150px; right: 150px; top: 960px; }
+  .ticks div { font-size: 46px; font-weight: 700; margin-bottom: 34px; display: flex; align-items: center; gap: 26px; letter-spacing: -0.02em; }
+  .ticks i { flex: none; width: 62px; height: 62px; border-radius: 50%; background: rgba(62,207,142,.16); color: var(--green); display: grid; place-items: center; font-style: normal; font-size: 36px; font-weight: 900; }
+  .progress { position: absolute; left: 0; bottom: 0; height: 10px; background: var(--gold); width: 0; }
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="grid" id="grid"></div>
+
+<!-- 1. The problem: 0 - 4.2s -->
+<div class="scene" data-s="0" data-e="4.2">
+  <div class="cap h2 a up" style="top:230px; --d:.15">Your dispatcher's phone.<br><span class="gold">Every. Single. Day.</span></div>
+  <div class="ring"><div class="rp a" style="--d:.4"></div>
+    <svg class="a" style="--d:.4" viewBox="0 0 24 24" fill="#f5c451"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg>
+  </div>
+  <div class="bubble a pop" style="left:90px; top:640px; --d:.7">Where are you?</div>
+  <div class="bubble a pop" style="left:560px; top:770px; --d:1.0">Loaded yet?</div>
+  <div class="bubble a pop" style="left:130px; top:900px; --d:1.3">When will you deliver?</div>
+  <div class="bubble a pop" style="left:600px; top:1420px; --d:1.6">Where are you?</div>
+  <div class="bubble a pop" style="left:70px; top:1480px; --d:1.85">ETA?</div>
+  <div class="bubble a pop" style="left:340px; top:1610px; --d:2.1">Where are you now?</div>
+  <div class="bubble a pop" style="left:640px; top:1000px; --d:2.35">Still on time?</div>
+  <div class="bubble a pop" style="left:220px; top:1740px; --d:2.6">Where are you?</div>
+</div>
+
+<!-- 2. The cost: 4.2 - 9s -->
+<div class="scene" data-s="4.2" data-e="9">
+  <div class="math">
+    <div class="line a up" style="--d:4.4"><b>125 loads</b> a week</div>
+    <div class="line a up" style="--d:4.8">× <b>4 check calls</b> per load</div>
+    <div class="line a up" style="--d:5.2">× <b>8 minutes</b> per call</div>
+    <div class="a fade" style="--d:5.8; margin-top:70px"><div class="big"><span id="count">0</span><small> hrs</small></div></div>
+    <div class="cap h3 a up" style="position:relative; left:0; right:0; margin-top:40px; --d:6.6">every week, just asking<br><span style="color:#fff">“where are you?”</span></div>
+  </div>
+</div>
+
+<!-- 3. Brand: 9 - 12s -->
+<div class="scene" data-s="9" data-e="12">
+  <div class="logo">
+    <div class="mark a pop" style="--d:9.2"><svg viewBox="0 0 24 24" fill="none" stroke="#1a1405" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.2" fill="#1a1405"/></svg></div>
+    <div class="wordmark a up" style="--d:9.5">Track Desk</div>
+    <div class="cap h3 a up" style="position:relative; left:0; right:0; margin-top:30px; --d:9.9">Check calls, <span class="gold" style="font-weight:800">done for you.</span></div>
+  </div>
+</div>
+
+<!-- 4. Driver flow: 12 - 18.5s -->
+<div class="scene" data-s="12" data-e="18.5">
+  <div class="cap h2 a up" style="top:170px; --d:12.2"><span class="step">1</span>We text every driver</div>
+  <div class="cap h3 a up" style="top:270px; --d:12.4">at pickup, then every few hours</div>
+  <div class="phone a slideup" style="--d:12.3">
+    <div class="notch"></div>
+    <div class="screen" id="sc-sms">
+      <div class="sms">
+        <div class="av">YB</div>
+        <div class="from">Your Brokerage</div>
+        <div class="msg a up" style="--d:13.1">Hi Dana, check call for load L-2042 (Atlanta → Chicago). Where are you? Tap to update: <u>trackdesk.app/c/7Xq2</u></div>
+      </div>
+      <div class="tap a" style="left:150px; top:500px; --d:14.3"></div>
+    </div>
+    <div class="screen a fade" style="--d:14.6; background:#0b0c0f; padding-top:60px"><img src="img/driver.png"></div>
+    <div class="tap a" style="left:210px; top:360px; --d:15.6"></div>
+    <div class="tap a" style="left:210px; top:930px; --d:16.4"></div>
+    <div class="screen a fade" style="--d:16.7; background:#0b0c0f; padding-top:60px"><img src="img/driver-done.png"></div>
+  </div>
+  <div class="cap h2 a up" style="top:1610px; --d:15.0"><span class="step">2</span>One tap. Location logged.</div>
+</div>
+
+<!-- 5. Load board: 18.5 - 23.5s -->
+<div class="scene" data-s="18.5" data-e="23.5">
+  <div class="cap h2 a up" style="top:200px; --d:18.7"><span class="step">3</span>Every load, one screen</div>
+  <div class="cap h3 a up" style="top:300px; --d:18.9">Location + ETA, updated automatically</div>
+    <div class="shot a slideup" style="top:470px; width:980px; margin-left:-490px; --d:19.0"><img src="img/board-m.png"></div>
+  <div class="pin a fade" style="left:50px; top:472px; width:980px; height:186px; --d:20.4"></div>
+  <div class="cap h3 a up" style="top:1340px; --d:20.8">No more spreadsheets.<br>No more “let me call him back.”</div>
+</div>
+
+<!-- 6. Late alert: 23.5 - 28s -->
+<div class="scene" data-s="23.5" data-e="28">
+  <div class="cap h2 a up" style="top:300px; --d:23.7"><span class="step">4</span>Late loads flagged</div>
+  <div class="cap h2 a up" style="top:400px; --d:24.0"><span class="hl">before your customer calls</span></div>
+  <div class="shot a zoomin" style="top:620px; width:980px; margin-left:-490px; border-radius:24px; --d:24.3"><img src="img/alert-m.png"></div>
+  <div class="a" style="position:absolute; left:50px; top:620px; width:980px; height:147px; border-radius:24px; animation-name:glow; animation-duration:1.4s; animation-iteration-count:3; --d:24.9"></div>
+  <div class="shot a slideup" style="top:880px; width:900px; margin-left:-450px; --d:25.4"><img src="img/update.png"></div>
+  <div class="cap h3 a up" style="top:1520px; --d:26.0">…with the shipper update<br>already written for you.</div>
+</div>
+
+<!-- 7. End card: 28 - 34s -->
+<div class="scene" data-s="28" data-e="34.5">
+  <div class="logo" style="top:250px">
+    <div class="mark a pop" style="--d:28.2; width:150px; height:150px; border-radius:40px; margin-bottom:34px"><svg viewBox="0 0 24 24" fill="none" stroke="#1a1405" stroke-width="2.6" stroke-linecap="round" style="width:90px;height:90px"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.2" fill="#1a1405"/></svg></div>
+    <div class="wordmark a up" style="--d:28.4; font-size:120px">Track Desk</div>
+  </div>
+  <div class="cap h1 a up" style="top:720px; --d:28.8">Stop dialling.<br><span class="gold">Start tracking.</span></div>
+  <div class="ticks">
+    <div class="a up" style="--d:29.6"><i>✓</i>Nothing for drivers to install</div>
+    <div class="a up" style="--d:29.9"><i>✓</i>Set up in one afternoon</div>
+    <div class="a up" style="--d:30.2"><i>✓</i>Pay only per load tracked</div>
+  </div>
+  <div class="cta a pop" style="--d:31.0">Book a live demo →</div>
+</div>
+
+<div class="progress" id="progress"></div>
+
+<script>
+  const DURATION = 34.5;
+  const scenes = [...document.querySelectorAll('.scene')];
+  const count = document.getElementById('count');
+  const ease = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
+
+  window.renderAt = (t) => {
+    for (const a of document.getAnimations()) a.currentTime = t * 1000;
+    for (const s of scenes) {
+      const st = +s.dataset.s, en = +s.dataset.e, f = 0.35;
+      const clamp = (x) => Math.min(1, Math.max(0, x));
+      const inF = st === 0 ? 1 : clamp((t - st) / f);
+      const outF = en >= DURATION ? 1 : clamp((en - t) / f);
+      s.style.opacity = t >= st && t <= en ? Math.min(inF, outF) : 0;
+      s.style.visibility = t >= st && t <= en ? 'visible' : 'hidden';
+      s.style.transform = `scale(${1 + 0.04 * ease((t - st) / (en - st))})`;
+    }
+    count.textContent = Math.round(66 * ease((t - 5.8) / 1.4));
+    document.getElementById('grid').style.setProperty('--gy', `${(t * 40) % 90}px`);
+    document.getElementById('progress').style.width = `${(t / DURATION) * 100}%`;
+  };
+  window.DURATION = DURATION;
+  renderAt(0);
+</script>
+</body>
+</html>
